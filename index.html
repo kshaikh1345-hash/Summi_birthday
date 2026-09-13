@@ -1,0 +1,581 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SYSTEM: BIRTHDAY.EXE</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --cream:#FFF8EE;
+    --ink:#2B2233;
+    --pink:#FF5FA0;
+    --pink-soft:#FFD3E6;
+    --lav:#B8A6E8;
+    --mint:#78E0C0;
+    --sun:#FFCF48;
+    --line: 3px solid var(--ink);
+    --shadow: 4px 4px 0 var(--ink);
+  }
+  *{box-sizing:border-box;}
+  html,body{
+    margin:0; padding:0; min-height:100vh;
+    background:
+      radial-gradient(circle at 15% 20%, var(--pink-soft) 0, transparent 40%),
+      radial-gradient(circle at 85% 80%, var(--mint) 0, transparent 35%),
+      var(--cream);
+    font-family:'Space Mono', monospace;
+    color:var(--ink);
+    overflow-x:hidden;
+    cursor: default;
+  }
+  h1,h2,h3, .display{
+    font-family:'Baloo 2', cursive;
+  }
+
+  /* ---------- BOOT SCREEN ---------- */
+  #boot{
+    position:fixed; inset:0; z-index:999;
+    background:var(--ink); color:var(--mint);
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    padding:24px; text-align:center;
+    transition: opacity .5s ease, visibility .5s ease;
+  }
+  #boot.hide{ opacity:0; visibility:hidden; pointer-events:none; }
+  #boot .logo{
+    font-family:'Baloo 2', cursive; font-size:clamp(28px,6vw,44px);
+    color:var(--sun); margin-bottom:18px;
+  }
+  #boot .line{
+    font-size:13px; margin:3px 0; opacity:.85; min-height:16px;
+  }
+  #bootbar{
+    width:min(320px, 80vw); height:14px; border:2px solid var(--mint);
+    margin-top:16px; overflow:hidden; border-radius:2px;
+  }
+  #bootfill{
+    width:0%; height:100%; background:var(--pink);
+    transition:width .18s linear;
+  }
+
+  /* ---------- TOP BAR ---------- */
+  header{
+    position:relative; z-index:5;
+    padding:22px clamp(16px,5vw,48px) 8px;
+    display:flex; align-items:baseline; justify-content:space-between; flex-wrap:wrap; gap:8px;
+  }
+  header .tag{
+    font-size:12px; letter-spacing:.02em; background:var(--ink); color:var(--cream);
+    padding:4px 10px; border-radius:20px;
+  }
+  header .sys{
+    font-size:12px; opacity:.7;
+  }
+
+  main{
+    position:relative;
+    min-height:calc(100vh - 90px);
+    padding: 0 clamp(16px,5vw,48px) 140px;
+  }
+
+  .hero{
+    text-align:center; padding: 26px 0 10px;
+  }
+  .hero .title{
+    font-size:clamp(34px, 7.5vw, 64px);
+    line-height:1.02; font-weight:800; margin:0 0 10px;
+    text-shadow: 3px 3px 0 var(--pink-soft);
+  }
+  .hero .sub{
+    font-size:15px; max-width:520px; margin:0 auto; opacity:.85;
+    background:rgba(255,255,255,.6); display:inline-block; padding:10px 16px;
+    border:2px dashed var(--ink); border-radius:14px;
+  }
+
+  /* ---------- DESKTOP GRID ---------- */
+  .desktop{
+    display:grid;
+    grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+    gap:18px;
+    max-width:760px; margin: 34px auto 0;
+  }
+  .icon{
+    background:none; border:none; cursor:pointer;
+    display:flex; flex-direction:column; align-items:center; gap:8px;
+    padding:10px 6px; border-radius:14px;
+    font-family:'Space Mono', monospace; color:var(--ink);
+    transition: transform .15s ease;
+  }
+  .icon:hover, .icon:focus-visible{ transform: translateY(-4px) rotate(-1deg); }
+  .icon .glyph{
+    width:58px; height:58px; border-radius:16px;
+    display:flex; align-items:center; justify-content:center;
+    font-size:28px; border:var(--line); box-shadow:var(--shadow);
+    background:var(--cream);
+  }
+  .icon:nth-child(1) .glyph{ background:var(--pink-soft); }
+  .icon:nth-child(2) .glyph{ background:var(--sun); }
+  .icon:nth-child(3) .glyph{ background:var(--mint); }
+  .icon:nth-child(4) .glyph{ background:var(--lav); }
+  .icon:nth-child(5) .glyph{ background:var(--pink-soft); }
+  .icon .label{
+    font-size:11px; text-align:center; line-height:1.2;
+    background:var(--cream); padding:2px 6px; border-radius:4px;
+  }
+  .icon.main .glyph{
+    background:var(--pink); color:white; animation: wiggle 2.4s ease-in-out infinite;
+  }
+  @keyframes wiggle{
+    0%,100%{ transform:rotate(0deg) scale(1); }
+    50%{ transform:rotate(4deg) scale(1.06); }
+  }
+
+  /* ---------- WINDOWS ---------- */
+  .win{
+    position:fixed;
+    width:min(300px, 84vw);
+    background:var(--cream);
+    border:var(--line);
+    border-radius:12px;
+    box-shadow:6px 6px 0 var(--ink);
+    z-index:50;
+    display:none;
+    top:18%; left:50%;
+    transform:translateX(-50%);
+  }
+  .win.open{ display:block; }
+  .win .bar{
+    background:var(--ink); color:var(--cream);
+    display:flex; align-items:center; justify-content:space-between;
+    padding:7px 10px; border-radius:8px 8px 0 0;
+    cursor:grab; font-size:12px; font-family:'Space Mono',monospace;
+    touch-action:none;
+    user-select:none;
+  }
+  .win .bar:active{ cursor:grabbing; }
+  .win .bar button{
+    background:var(--pink); border:2px solid var(--cream); color:var(--cream);
+    width:20px; height:20px; border-radius:5px; font-size:11px; line-height:1;
+    cursor:pointer;
+  }
+  .win .body{
+    padding:16px 14px; font-size:13.5px; line-height:1.5;
+  }
+  .win .body .art{
+    font-family:'Space Mono', monospace; white-space:pre; font-size:10px;
+    line-height:1.15; text-align:center; margin-bottom:8px; color:var(--pink);
+  }
+
+  /* ---------- TASKBAR ---------- */
+  #taskbar{
+    position:fixed; bottom:0; left:0; right:0; z-index:60;
+    background:var(--ink); color:var(--cream);
+    display:flex; align-items:center; gap:10px;
+    padding:8px clamp(10px,3vw,24px);
+    font-family:'Space Mono', monospace; font-size:12px;
+    border-top:3px solid var(--pink);
+  }
+  #startbtn{
+    background:var(--pink); color:var(--ink); border:none; border-radius:8px;
+    padding:7px 12px; font-family:'Baloo 2',cursive; font-weight:700; font-size:13px;
+    cursor:pointer;
+  }
+  #clock{ margin-left:auto; opacity:.85; }
+
+  /* ---------- CAKE SURPRISE ---------- */
+  .cake-surprise{ text-align:center; }
+  .cake-box{ position:relative; width:210px; height:185px; margin:4px auto 14px; }
+  .cake-body{ position:absolute; left:20px; right:20px; bottom:10px; height:88px; border:3px solid var(--ink); border-radius:14px 14px 20px 20px; background:linear-gradient(#FFD3E6,#FF9BC6); box-shadow:5px 5px 0 var(--ink); }
+  .cake-icing{ position:absolute; left:20px; right:20px; bottom:75px; height:42px; border:3px solid var(--ink); border-radius:50%; background:var(--cream); z-index:2; }
+  .cake-drip{ position:absolute; width:15px; height:25px; border:3px solid var(--ink); border-top:0; border-radius:0 0 12px 12px; background:var(--cream); z-index:3; }
+  .d1{left:54px;bottom:62px}.d2{left:96px;bottom:58px}.d3{right:54px;bottom:62px}
+  .candle2{ position:absolute; bottom:105px; width:12px; height:55px; border:3px solid var(--ink); background:var(--lav); z-index:4; border-radius:4px; }
+  .cc1{left:65px}.cc2{left:99px}.cc3{left:133px}
+  .flame2{ position:absolute; left:50%; top:-25px; transform:translateX(-50%) rotate(45deg); width:18px;height:25px;background:var(--sun);border:2px solid var(--ink);border-radius:50% 50% 50% 0;animation:flame2 .45s infinite alternate; }
+  @keyframes flame2{to{transform:translateX(-50%) rotate(45deg) scale(.72);}}
+  .cake-reveal{ display:none; margin:15px 0 5px; padding:14px; border:3px dashed var(--pink); border-radius:14px; background:var(--pink-soft); animation:pop .45s ease; }
+  .cake-reveal.show{display:block;}
+  .shock{font-family:'Baloo 2',cursive;font-size:28px;font-weight:800;color:var(--pink);}
+  @keyframes pop{from{transform:scale(.6) rotate(-2deg);opacity:0}to{transform:scale(1) rotate(0);opacity:1}}
+
+  /* ---------- CELEBRATION OVERLAY ---------- */
+  #party{
+    position:fixed; inset:0; z-index:200;
+    display:none; align-items:center; justify-content:center;
+    padding:20px;
+    background:rgba(43,34,51,.88);
+  }
+  #party.open{ display:flex; }
+  .card{
+    position:relative;
+    background:var(--cream); border:var(--line); border-radius:20px;
+    box-shadow:8px 8px 0 var(--pink);
+    max-width:520px; width:100%;
+    padding:34px 26px 28px;
+    text-align:center;
+    overflow:hidden;
+  }
+  .card h2{
+    font-size:clamp(26px,6vw,40px); margin:6px 0 12px; color:var(--pink);
+    text-shadow:2px 2px 0 var(--ink);
+  }
+  .card p{ font-size:14.5px; line-height:1.6; margin:0 0 10px; }
+  .card .closebtn{
+    margin-top:14px; background:var(--ink); color:var(--cream); border:none;
+    padding:10px 20px; border-radius:30px; font-family:'Baloo 2',cursive;
+    font-weight:700; font-size:14px; cursor:pointer;
+  }
+  .balloon{
+    position:absolute; bottom:-60px; font-size:34px;
+    animation: rise 5.5s ease-in forwards;
+  }
+  @keyframes rise{
+    to{ transform: translateY(-620px) rotate(8deg); opacity:0; }
+  }
+  #confetti-canvas{
+    position:fixed; inset:0; z-index:210; pointer-events:none;
+  }
+
+  .heart-trail{
+    position:fixed; pointer-events:none; z-index:300;
+    font-size:14px; user-select:none;
+    animation: floatfade 900ms ease-out forwards;
+  }
+  @keyframes floatfade{
+    to{ transform:translateY(-30px) scale(1.3); opacity:0; }
+  }
+
+  footer{
+    text-align:center; font-size:11px; opacity:.55; padding:18px 10px 90px;
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    *{ animation-duration:.001ms !important; animation-iteration-count:1 !important; transition-duration:.001ms !important; }
+  }
+</style>
+</head>
+<body>
+
+<!-- BOOT SCREEN -->
+<div id="boot">
+  <div class="logo">BIRTHDAY.EXE</div>
+  <div class="line" id="bootline">Initializing party protocols…</div>
+  <div id="bootbar"><div id="bootfill"></div></div>
+</div>
+
+<canvas id="confetti-canvas"></canvas>
+
+<header>
+  <span class="tag">SYSTEM ONLINE</span>
+  <span class="sys">v1.0 · running since your friendship began</span>
+</header>
+
+<main>
+  <div class="hero">
+    <h1 class="title">Warning: Excessive<br>Cuteness Detected</h1>
+    <p class="sub">This device has identified a Best Friend Birthday Event nearby. Some icons below are decoys. One of them is important. Good luck.</p>
+  </div>
+
+  <div class="desktop">
+    <button class="icon" data-win="w1">
+      <span class="glyph">🎁</span>
+      <span class="label">PRESENT.exe</span>
+    </button>
+    <button class="icon" data-win="w2">
+      <span class="glyph">🚫</span>
+      <span class="label">DO_NOT<br>_CLICK.exe</span>
+    </button>
+    <button class="icon" data-win="w3">
+      <span class="glyph">🍰</span>
+      <span class="label">CAKE.exe</span>
+    </button>
+    <button class="icon" data-win="w4">
+      <span class="glyph">📁</span>
+      <span class="label">MEMORIES.txt</span>
+    </button>
+    <button class="icon" data-win="w5">
+      <span class="glyph">❓</span>
+      <span class="label">README.txt</span>
+    </button>
+    <button class="icon main" id="openParty">
+      <span class="glyph">🎉</span>
+      <span class="label">IMPORTANT_<br>OPEN_ME.exe</span>
+    </button>
+  </div>
+
+  <!-- windows -->
+  <div class="win" id="w1" style="top:20%;">
+    <div class="bar"><span>PRESENT.exe</span><button data-close>✕</button></div>
+    <div class="body">
+      You can't open this until the actual day.<br><br>
+      …fine, here's a preview: <strong>hugs.zip</strong><br>
+      Size: 0 bytes. Value: immeasurable.
+    </div>
+  </div>
+
+  <div class="win" id="w2" style="top:32%;">
+    <div class="bar"><span>DO_NOT_CLICK.exe</span><button data-close>✕</button></div>
+    <div class="body">
+      You clicked it anyway, didn't you.<br><br>
+      🏆 Achievement Unlocked: <strong>Professionally Curious Bestie</strong>
+    </div>
+  </div>
+
+  <div class="win" id="w3" style="top:24%;">
+    <div class="bar"><span>CAKE.exe</span><button data-close>✕</button></div>
+    <div class="body cake-surprise">
+      <div class="cake-box">
+        <div class="candle2 cc1"><div class="flame2"></div></div>
+        <div class="candle2 cc2"><div class="flame2"></div></div>
+        <div class="candle2 cc3"><div class="flame2"></div></div>
+        <div class="cake-icing"></div>
+        <div class="cake-drip d1"></div><div class="cake-drip d2"></div><div class="cake-drip d3"></div>
+        <div class="cake-body"></div>
+      </div>
+      <strong>🎂 Birthday cake detected.</strong><br>
+      <span id="cakeHint">But wait... why is it acting suspicious? 👀</span>
+      <br><button id="cakeButton" style="margin-top:12px;padding:8px 14px;">LIGHT THE CANDLES 🕯️</button>
+      <div class="cake-reveal" id="cakeReveal">
+        <div class="shock">WAIT—WHAT?! 😭🎉</div>
+        <p><b>You thought THIS was the surprise?</b></p>
+        <p>HAHAHA Bhaya... you have been successfully distracted by cake. 😂</p>
+        <p>Now look for <b>IMPORTANT_OPEN_ME.exe</b>. That's where the <i>real</i> surprise is hiding. 💜</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="win" id="w4" style="top:28%;">
+    <div class="bar"><span>MEMORIES.txt</span><button data-close>✕</button></div>
+    <div class="body">
+      Loaded 1 file: a whole lot of inside jokes, questionable decisions, and unconditional support.<br><br>
+      File cannot be compressed. It just keeps growing. Good.
+    </div>
+  </div>
+
+  <div class="win" id="w5" style="top:36%;">
+    <div class="bar"><span>README.txt</span><button data-close>✕</button></div>
+    <div class="body">
+      <strong>Instructions for today:</strong><br>
+      Step 1 — Feel loved.<br>
+      Step 2 — There is no step 2.<br><br>
+      Proceed to <em>IMPORTANT_OPEN_ME.exe</em> when ready.
+    </div>
+  </div>
+</main>
+
+<div id="taskbar">
+  <button id="startbtn">★ Start</button>
+  <span>bestie-pc</span>
+  <span id="clock">--:--</span>
+</div>
+
+<!-- celebration overlay -->
+<div id="party">
+  <div class="card" id="partyCard">
+    <h2>HAPPY BIRTHDAY!</h2>
+    <p>Somewhere in the terms and conditions of being your best friend, it says I have to say something nice today. Luckily, that's the easy part.</p>
+    <p>Here's to another year of bad decisions made together, inside jokes nobody else understands, and you being the one person my system never has an error loading.</p>
+    <p><strong>Have the best day. You deserve every bit of it.</strong></p>
+    <button class="closebtn" id="closeParty">close (but don't stop smiling)</button>
+  </div>
+</div>
+
+<footer>made with chaos, confetti, and genuine love — edit the code to make it yours</footer>
+
+<script>
+// ---------- BOOT SEQUENCE ----------
+const bootLines = [
+  "Initializing party protocols…",
+  "Loading confetti drivers…",
+  "Calibrating cake-to-candle ratio…",
+  "Checking friendship.log — 100% uptime…",
+  "Suppressing adulthood, one day only…",
+  "Almost there…"
+];
+const bootline = document.getElementById('bootline');
+const bootfill = document.getElementById('bootfill');
+const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+let i = 0;
+const bootTimer = setInterval(() => {
+  i++;
+  bootline.textContent = bootLines[Math.min(i, bootLines.length - 1)];
+  bootfill.style.width = Math.min(100, (i / bootLines.length) * 100) + '%';
+  if (i >= bootLines.length) {
+    clearInterval(bootTimer);
+    setTimeout(() => document.getElementById('boot').classList.add('hide'), 300);
+  }
+}, reduceMotion ? 60 : 380);
+
+// ---------- CLOCK ----------
+function tick(){
+  const d = new Date();
+  document.getElementById('clock').textContent =
+    d.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+}
+tick(); setInterval(tick, 1000);
+
+// ---------- WINDOWS: open / close / drag ----------
+document.querySelectorAll('.icon[data-win]').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.getElementById(btn.dataset.win).classList.add('open');
+  });
+});
+document.querySelectorAll('.win [data-close]').forEach(btn => {
+  btn.addEventListener('click', () => btn.closest('.win').classList.remove('open'));
+});
+
+document.querySelectorAll('.win .bar').forEach(bar => {
+  let dragging = false, offX = 0, offY = 0;
+  const win = bar.closest('.win');
+  bar.addEventListener('pointerdown', e => {
+    dragging = true;
+    const rect = win.getBoundingClientRect();
+    offX = e.clientX - rect.left;
+    offY = e.clientY - rect.top;
+    win.style.left = rect.left + 'px';
+    win.style.top = rect.top + 'px';
+    win.style.transform = 'none';
+    bar.setPointerCapture(e.pointerId);
+  });
+  bar.addEventListener('pointermove', e => {
+    if (!dragging) return;
+    win.style.left = (e.clientX - offX) + 'px';
+    win.style.top = (e.clientY - offY) + 'px';
+  });
+  bar.addEventListener('pointerup', () => dragging = false);
+});
+
+document.getElementById('startbtn').addEventListener('click', () => {
+  document.getElementById('w5').classList.add('open');
+});
+
+// ---------- CAKE SURPRISE + INSTRUMENTAL ----------
+let birthdayTunePlayed = false;
+function playBirthdayTune(){
+  if(birthdayTunePlayed) return;
+  birthdayTunePlayed = true;
+  const AC = window.AudioContext || window.webkitAudioContext;
+  if(!AC) return;
+  const ctx = new AC();
+  const now = ctx.currentTime;
+  const notes = [
+    ['G4',0],['G4',.28],['A4',.56],['G4',.84],['C5',1.12],['B4',1.40],
+    ['G4',1.82],['G4',2.10],['A4',2.38],['G4',2.66],['D5',2.94],['C5',3.22],
+    ['G4',3.64],['G4',3.92],['G5',4.20],['E5',4.48],['C5',4.76],['B4',5.04],['A4',5.32],
+    ['F5',5.74],['F5',6.02],['E5',6.30],['C5',6.58],['D5',6.86],['C5',7.14]
+  ];
+  const f={G4:392,A4:440,B4:493.88,C5:523.25,D5:587.33,E5:659.25,F5:698.46,G5:783.99};
+  notes.forEach(([n,t])=>{
+    const o=ctx.createOscillator(), g=ctx.createGain();
+    o.type='sine'; o.frequency.value=f[n];
+    g.gain.setValueAtTime(.0001,now+t);
+    g.gain.exponentialRampToValueAtTime(.16,now+t+.025);
+    g.gain.exponentialRampToValueAtTime(.0001,now+t+.27);
+    o.connect(g); g.connect(ctx.destination); o.start(now+t); o.stop(now+t+.3);
+  });
+}
+
+const cakeButton=document.getElementById('cakeButton');
+if(cakeButton){
+  cakeButton.addEventListener('click',()=>{
+    playBirthdayTune();
+    document.getElementById('cakeReveal').classList.add('show');
+    document.getElementById('cakeHint').textContent='CANDLES LIT. SURPRISE PROTOCOL ACTIVATED. 🚨';
+    cakeButton.textContent='I WAS NOT READY FOR THIS 😭';
+    cakeButton.disabled=true;
+    burstConfetti();
+  });
+}
+
+// ---------- PARTY OVERLAY ----------
+const party = document.getElementById('party');
+document.getElementById('openParty').addEventListener('click', () => {
+  party.classList.add('open');
+  spawnBalloons();
+  burstConfetti();
+});
+document.getElementById('closeParty').addEventListener('click', () => {
+  party.classList.remove('open');
+});
+
+function spawnBalloons(){
+  const card = document.getElementById('partyCard');
+  const emojis = ['🎈','🎈','🎈','💗'];
+  for(let n=0; n<10; n++){
+    const b = document.createElement('div');
+    b.className = 'balloon';
+    b.textContent = emojis[n % emojis.length];
+    b.style.left = (Math.random()*90) + '%';
+    b.style.animationDelay = (Math.random()*1.2) + 's';
+    card.appendChild(b);
+    setTimeout(() => b.remove(), 6500);
+  }
+}
+
+// ---------- CONFETTI CANVAS ----------
+const canvas = document.getElementById('confetti-canvas');
+const ctx = canvas.getContext('2d');
+function resize(){ canvas.width = innerWidth; canvas.height = innerHeight; }
+resize(); window.addEventListener('resize', resize);
+
+const colors = ['#FF5FA0','#FFCF48','#78E0C0','#B8A6E8','#2B2233'];
+let particles = [];
+function burstConfetti(){
+  if (reduceMotion) return;
+  particles = [];
+  for(let i=0;i<140;i++){
+    particles.push({
+      x: canvas.width/2 + (Math.random()-0.5)*120,
+      y: canvas.height*0.35,
+      vx: (Math.random()-0.5)*9,
+      vy: Math.random()*-9 - 3,
+      size: Math.random()*7+4,
+      color: colors[Math.floor(Math.random()*colors.length)],
+      rot: Math.random()*360,
+      vr: (Math.random()-0.5)*12,
+      life: 0
+    });
+  }
+  requestAnimationFrame(animateConfetti);
+}
+function animateConfetti(){
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  let alive = false;
+  particles.forEach(p => {
+    p.vy += 0.28;
+    p.x += p.vx; p.y += p.vy; p.rot += p.vr; p.life++;
+    if (p.life < 180 && p.y < canvas.height + 30){
+      alive = true;
+      ctx.save();
+      ctx.translate(p.x, p.y);
+      ctx.rotate(p.rot * Math.PI/180);
+      ctx.fillStyle = p.color;
+      ctx.fillRect(-p.size/2, -p.size/2, p.size, p.size*0.6);
+      ctx.restore();
+    }
+  });
+  if (alive) requestAnimationFrame(animateConfetti);
+  else ctx.clearRect(0,0,canvas.width,canvas.height);
+}
+
+// ---------- CURSOR HEART TRAIL ----------
+if (!reduceMotion && matchMedia('(pointer: fine)').matches){
+  let last = 0;
+  window.addEventListener('mousemove', e => {
+    const now = Date.now();
+    if (now - last < 90) return;
+    last = now;
+    const h = document.createElement('span');
+    h.className = 'heart-trail';
+    h.textContent = ['💗','✨','🎀'][Math.floor(Math.random()*3)];
+    h.style.left = e.clientX + 'px';
+    h.style.top = e.clientY + 'px';
+    document.body.appendChild(h);
+    setTimeout(() => h.remove(), 900);
+  });
+}
+</script>
+</body>
+</html>
